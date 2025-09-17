@@ -1,4 +1,9 @@
 let form = document.getElementById("userForm");
+let updateContainer = document.querySelector('#updateContainer')
+
+document.querySelector('#updateClose').addEventListener("click", () => {
+    updateContainer.classList.toggle("active")
+})
 let tableBody = document.querySelector("#userTable tbody");
 
 form.addEventListener("submit", function(event) {
@@ -20,4 +25,17 @@ form.addEventListener("submit", function(event) {
 
 
     form.reset();
+
 });
+
+function deleteEntry(deleteIndex) {
+    entries = entries.filter((entry, index) => { return index != deleteIndex })
+    displayData()
+}
+
+function updateEntry(index) {
+
+    updateContainer.setAttribute('class','active')
+    console.log(entries[index])
+}
+
