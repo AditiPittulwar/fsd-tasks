@@ -1,99 +1,106 @@
-let grid_item_collection = document.querySelectorAll(".grid-item")
+const cells = document.querySelectorAll("[data-cell]");
+const resultText = document.getElementById("resultText");
+const startBtn = document.getElementById("startBtn");
+const restartBtn = document.getElementById("restartBtn");
+const timeDisplay = document.getElementById("time");
 
-let currentPlayer = "X"
+let currentPlayer = "X";
+let gameActive = false;
+let timer;
+let seconds = 0, minutes = 0, hours = 0;
 
-let board = ["", "", "", "", "", "", "", "", ""]
+// Winning combinations
+const winningCombos = [
+  [0,1,2],[3,4,5],[6,7,8], // rows
+  [0,3,6],[1,4,7],[2,5,8], // columns
+  [0,4,8],[2,4,6]           // diagonals
+];
 
-let startBtn = document.querySelector(".controls button");
-
-let gridItems = document.querySelectorAll(".grid-item");
-
-let clock = document.querySelector(".time");
-
-
-let result_title = document.querySelector(".result .title")
-
-let playerX = document.querySelector(".player.player-x")
-let playerO = document.querySelector(".player.player-o")
-
-playerX.classList.add("active")
-
-console.log(board)
-
-let winningPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8],
-    [0, 3, 6], [1, 4, 7], [2, 5, 8],
-    [0, 4, 8], [2, 4, 6]
-]
-
-grid_item_collection.forEach((item) => {
-    item.addEventListener("click", (event) => {
-        console.log(event.target.dataset.item)
-        event.target.innerHTML = currentPlayer
-        move(event.target.dataset.item, currentPlayer)
-    })
-})
-
-function ChangeCurrentPlayer() {
-    if (currentPlayer == "X") {
-        currentPlayer = "O"
-        playerO.classList.add("active")
-        playerX.classList.remove("active")
-    } else if (currentPlayer == "O") {
-        currentPlayer = "X"
-        playerX.classList.add("active")
-        playerO.classList.remove("active")
-    }
-}
-
-function move(index, player) {
-    if (board[index].length == 0) {
-        board[index] = player
-        ChangeCurrentPlayer()
-    } else {
-        alert("please select empty cell !")
-        ChangeCurrentPlayer()
-    }
-
-    let result = checkWinner()
-
-    if (result) {
-        result_title.innerHTML = result
-    }
-}
-
-function checkWinner() {
-
-    let result = false
-
-    winningPatterns.forEach((pattern) => {
-        let [a, b, c] = pattern
-
-        if (board[a] && board[a] == board[b] && board[a] == board[c]) {
-            console.log(board[a] + " is the winner !")
-            result = board[a] + " is the winner !"
-        }
-
-    })
-
-    return result
-}
-
-
-function checkDraw() {
-    let result = board.every((item) => item)
-    if (result) result = "game drawn !"
-    return result
-}
-
+// Start game
 startBtn.addEventListener("click", () => {
-    // Reset game
-    resetBoard();
-    gameActive = true;
+  resetBoard();
+  gameActive = true;
+  currentPlayer = "X";
+  resultText.textContent = "Game Started! Player X's turn";
 
-    // Reset clock
-    clearInterval(timerInterval);
-    seconds = minutes = hours = 0;
-    clock.textContent = "00:00:00";
-    timerInterval = setInterval(updateClock, 1000);
+  // reset timer
+  clearInterval(timer);
+  seconds = minutes = hours = 0;
+  timeDisplay.textContent = "00:00:00";
+  timer = setInterval(updateClock, 1000);
 });
+
+// Restart game
+restartBtn.addEventListener("click", () => {
+  resetBoard();
+  gameActive = true;
+  currentPlayer = "X";
+  resultText.textContent = "Game Restarted! Player X's turn";
+
+  // reset timer
+  clearInterval(timer);
+  seconds = minutes = hours = 0;
+  timeDisplay.textContent = "00:00:00";
+  timer = setInterval(updateClock, 1000);
+});
+
+// Cell click
+cells.forEach((cell, index) => {
+  cell.addEventListener("click", () => {
+    if (!gameActive || cell.textContent !== "") return;
+
+    cell.textContent = currentPlayer;
+    cell.classList.add("taken");
+
+    if (checkWinner(currentPlayer)) {
+      resultText.textContent = `🎉 Player ${currentPlayer} Wins!`;
+      gameActive = false;
+      clearInterval(timer);
+      return;
+    }
+
+    if (isDraw()) {
+      resultText.textContent = " It's a Draw!";
+      gameActive = false;
+      clearInterval(timer);
+      return;
+    }
+
+    // Switch player
+    currentPlayer = currentPlayer === "X" ? "O" : "X";
+    resultText.textContent = `Player ${currentPlayer}'s turn`;
+  });
+});
+
+// Reset board
+function resetBoard() {
+  cells.forEach(cell => {
+    cell.textContent = "";
+    cell.classList.remove("taken");
+  });
+}
+
+// Check winner
+function checkWinner(player) {
+  return winningCombos.some(combo => {
+    return combo.every(index => cells[index].textContent === player);
+  });
+}
+
+// Check draw
+function isDraw() {
+  return [...cells].every(cell => cell.textContent !== "");
+}
+
+// Timer function
+function updateClock() {
+  seconds++;
+  if (seconds === 60) { seconds = 0; minutes++; }
+  if (minutes === 60) { minutes = 0; hours++; }
+
+  let h = hours.toString().padStart(2, "0");
+  let m = minutes.toString().padStart(2, "0");
+  let s = seconds.toString().padStart(2, "0");
+  timeDisplay.textContent = `${h}:${m}:${s}`;
+}
+
